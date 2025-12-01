@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import vanImg from "./assets/van.png";
+import "./App.css";
 
 function App() {
   const [routeName, setRouteName] = useState("");
@@ -30,11 +31,21 @@ function App() {
     });
   };
 
+  // Count filled locations
+  const filledCount = Object.values(locations).flat().filter(l => l.trim() !== "").length;
+  const totalSlots = 16;
+
   // --- Export as image (html2canvas) ---
   const exportAsImage = async () => {
     const html2canvas = (await import("html2canvas")).default;
     const element = document.getElementById("export-area");
-    html2canvas(element, { useCORS: true, backgroundColor: "#FFFDE7", scale: 2, width: 1600, height: 990 }).then((canvas) => {
+    html2canvas(element, { 
+      useCORS: true, 
+      backgroundColor: "#FFFEF5", 
+      scale: 2, 
+      width: 1600, 
+      height: 990 
+    }).then((canvas) => {
       const link = document.createElement("a");
       link.download = `${routeName || "route"}_load_chart.jpg`;
       link.href = canvas.toDataURL("image/jpeg", 1.0);
@@ -43,262 +54,173 @@ function App() {
   };
 
   return (
-    <div style={{ background: "#FFFDE7", minHeight: "100vh", padding: 0 }}>
-      <div
-        id="export-area"
-        style={{
-          width: 1600,
-          height: 990,
-          margin: "40px auto",
-          background: "#fff",
-          borderRadius: 14,
-          boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-          padding: 0,
-          position: "relative",
-          overflow: "hidden",
-          display: "flex",
-          flexDirection: "column"
-        }}
-      >
+    <div className="app-container">
+      {/* Background decoration */}
+      <div className="bg-pattern"></div>
+      
+      <div id="export-area" className="export-area">
         {/* Header */}
-        <div
-          style={{
-            border: "2.5px solid #D40511",
-            background: "#FFD600",
-            padding: "24px 24px 16px 24px",
-            textAlign: "center",
-            borderRadius: "14px 14px 0 0",
-            position: "relative",
-            minHeight: 110,
-            boxSizing: "border-box",
-            width: "100%"
-          }}
-        >
-          {editingRoute ? (
-            <input
-              value={routeName}
-              onChange={(e) => setRouteName(e.target.value)}
-              placeholder="e.g. KR1A"
-              autoFocus
-              style={{
-                fontSize: 44,
-                fontWeight: "bold",
-                color: "#D40511",
-                border: "none",
-                background: "transparent",
-                outline: "none",
-                textAlign: "center",
-                width: "100%",
-                minWidth: 320,
-                maxWidth: 900,
-                margin: "0 auto 0 auto",
-                display: "block",
-                overflowWrap: "break-word",
-                padding: "8px 0 4px 0",
-                lineHeight: 1.1,
-                whiteSpace: "nowrap"
-              }}
-              onBlur={() => setEditingRoute(false)}
-              onKeyDown={e => { if (e.key === "Enter") setEditingRoute(false); }}
-            />
-          ) : (
-            <div
-              onClick={() => setEditingRoute(true)}
-              style={{
-                fontSize: 44,
-                fontWeight: "bold",
-                color: "#D40511",
-                textAlign: "center",
-                minWidth: 320,
-                maxWidth: 900,
-                margin: "0 auto 0 auto",
-                padding: "8px 0 4px 0",
-                lineHeight: 1.1,
-                cursor: "pointer",
-                whiteSpace: "nowrap"
-              }}
-              title="Click to edit route name"
-            >
-              {routeName || <span style={{ color: "#bbb" }}>e.g. KR1A</span>}
+        <header className="header">
+          <div className="header-content">
+            <div className="header-left">
+              <div className="dhl-logo">DHL</div>
+              <span className="header-subtitle">Van Load Chart</span>
             </div>
-          )}
-          <div
-            style={{
-              color: "#D40511",
-              fontWeight: "bold",
-              fontSize: 20,
-              position: "absolute",
-              right: 32,
-              bottom: 10
-            }}
-          >
-            Excellence. Simply delivered.
+            
+            <div className="route-name-container">
+              {editingRoute ? (
+                <input
+                  value={routeName}
+                  onChange={(e) => setRouteName(e.target.value)}
+                  placeholder="Enter Route"
+                  autoFocus
+                  className="route-input"
+                  onBlur={() => setEditingRoute(false)}
+                  onKeyDown={e => { if (e.key === "Enter") setEditingRoute(false); }}
+                />
+              ) : (
+                <div
+                  onClick={() => setEditingRoute(true)}
+                  className="route-display"
+                  title="Click to edit route name"
+                >
+                  {routeName || <span className="route-placeholder">Enter Route</span>}
+                </div>
+              )}
+            </div>
+            
+            <div className="header-right">
+              <div className="tagline">Excellence. Simply delivered.</div>
+            </div>
           </div>
-        </div>
+        </header>
 
         {/* Main layout grid */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 480px 1fr",
-            gap: 80,
-            padding: "40px 32px 24px 32px",
-            alignItems: "center",
-            justifyItems: "center",
-            flex: 1
-          }}
-        >
+        <main className="main-grid">
           {/* Left quadrants */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 60, justifyContent: "center", height: "100%" }}>
+          <div className="quadrant-column">
             <QuadrantBox
+              number="2"
               title="Quadrant 2"
-              color="#D40511"
+              subtitle="Back Left"
+              icon="↖"
               locations={locations.q2}
               onChange={(idx, val) => handleInputChange("q2", idx, val)}
-              minRows={4}
             />
             <QuadrantBox
-              title="Quadrant 4 (Dangerous Goods Area)"
-              color="#D40511"
+              number="4"
+              title="Quadrant 4"
+              subtitle="Dangerous Goods"
+              icon="⚠️"
+              isDangerous
               locations={locations.q4}
               onChange={(idx, val) => handleInputChange("q4", idx, val)}
-              minRows={4}
             />
           </div>
+
           {/* Van image */}
-          <div style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            height: "100%",
-            minHeight: 440
-          }}>
-            <img
-              src={vanImg}
-              alt="DHL van"
-              style={{
-                width: 440,
-                marginBottom: 16,
-                borderRadius: 12,
-                border: "2.5px solid #FFD600",
-                boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
-                marginTop: 0
-              }}
-            />
-            <div style={{ color: "#999", fontSize: 14, marginTop: 6 }}>
-              Van layout (reference)
+          <div className="van-container">
+            <div className="van-wrapper">
+              <img src={vanImg} alt="DHL van" className="van-image" />
+              <div className="van-overlay">
+                <div className="quadrant-indicator q1-indicator">Q1</div>
+                <div className="quadrant-indicator q2-indicator">Q2</div>
+                <div className="quadrant-indicator q3-indicator">Q3</div>
+                <div className="quadrant-indicator q4-indicator">Q4</div>
+              </div>
+            </div>
+            <div className="van-label">Van Layout Reference</div>
+            
+            {/* Progress indicator */}
+            <div className="progress-container">
+              <div className="progress-bar">
+                <div 
+                  className="progress-fill"
+                  style={{ width: `${(filledCount / totalSlots) * 100}%` }}
+                ></div>
+              </div>
+              <div className="progress-text">{filledCount}/{totalSlots} stops assigned</div>
             </div>
           </div>
+
           {/* Right quadrants */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 60, justifyContent: "center", height: "100%" }}>
+          <div className="quadrant-column">
             <QuadrantBox
+              number="1"
               title="Quadrant 1"
-              color="#D40511"
+              subtitle="Front Right"
+              icon="↗"
               locations={locations.q1}
               onChange={(idx, val) => handleInputChange("q1", idx, val)}
-              minRows={4}
             />
             <QuadrantBox
+              number="3"
               title="Quadrant 3"
-              color="#D40511"
+              subtitle="Back Right"
+              icon="↘"
               locations={locations.q3}
               onChange={(idx, val) => handleInputChange("q3", idx, val)}
-              minRows={4}
             />
           </div>
-        </div>
+        </main>
       </div>
+
       {/* Action buttons */}
-      <div style={{ textAlign: "center", marginTop: 24 }}>
-        <button
-          onClick={clearAll}
-          style={{
-            background: "#FFD600",
-            color: "#D40511",
-            fontWeight: "bold",
-            fontSize: 20,
-            border: "2px solid #D40511",
-            borderRadius: 8,
-            padding: "12px 32px",
-            marginRight: 24,
-            cursor: "pointer"
-          }}
-        >
+      <div className="actions">
+        <button onClick={clearAll} className="btn btn-secondary">
+          <span className="btn-icon">🗑️</span>
           Clear All
         </button>
-        <button
-          onClick={exportAsImage}
-          style={{
-            background: "#D40511",
-            color: "#fff",
-            fontWeight: "bold",
-            fontSize: 20,
-            border: "none",
-            borderRadius: 8,
-            padding: "12px 32px",
-            cursor: "pointer"
-          }}
-        >
+        <button onClick={exportAsImage} className="btn btn-primary">
+          <span className="btn-icon">📸</span>
           Export as JPEG
         </button>
       </div>
-      <div style={{ textAlign: "center", color: "#aaa", fontSize: 14, marginTop: 16 }}>
-        &copy; {new Date().getFullYear()} DHL Van Load Chart
-      </div>
+
+      <footer className="footer">
+        <p>&copy; {new Date().getFullYear()} DHL Van Load Chart Tool</p>
+      </footer>
     </div>
   );
 }
 
 // Quadrant input box component
-function QuadrantBox({ title, color, locations, onChange, minRows = 4 }) {
-  // Always render at least minRows input fields for alignment
+function QuadrantBox({ number, title, subtitle, icon, locations, onChange, isDangerous = false }) {
   const visibleInputs = [...locations];
-  while (visibleInputs.length < minRows) visibleInputs.push("");
+  while (visibleInputs.length < 4) visibleInputs.push("");
+  
+  const filledCount = locations.filter(l => l.trim() !== "").length;
 
   return (
-    <div
-      style={{
-        background: "#FFFDE7",
-        border: `2.5px solid ${color}`,
-        borderRadius: 12,
-        padding: 18,
-        minWidth: 400,
-        minHeight: 240,
-        maxWidth: 440,
-        boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "flex-start"
-      }}
-    >
-      <div style={{ fontWeight: "bold", color, fontSize: 22, marginBottom: 8 }}>
-        {title}
-      </div>
-      {visibleInputs.map((loc, idx) => (
-        <div key={idx} style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>
-          <input
-            type="text"
-            value={loc}
-            onChange={(e) => onChange(idx, e.target.value)}
-            placeholder="Town or street"
-            style={{
-              flex: 1,
-              fontSize: 18,
-              padding: "6px 8px",
-              border: loc.trim() === "" ? "1.5px solid #FFD600" : `2.5px solid ${color}`,
-              borderRadius: 8,
-              background: loc.trim() === "" ? "#FFFDE7" : "#fff",
-              width: "99%",
-              minWidth: 0,
-              color: loc.trim() === "" ? "#FFFDE7" : "#222",
-              filter: loc.trim() === "" ? "blur(2.5px)" : "none",
-              opacity: loc.trim() === "" ? 0.15 : 1,
-              transition: "filter 0.2s, opacity 0.2s, border 0.2s"
-            }}
-          />
+    <div className={`quadrant-box ${isDangerous ? 'quadrant-dangerous' : ''}`}>
+      <div className="quadrant-header">
+        <div className="quadrant-number">{number}</div>
+        <div className="quadrant-info">
+          <div className="quadrant-title">{title}</div>
+          <div className="quadrant-subtitle">{subtitle}</div>
         </div>
-      ))}
+        <div className="quadrant-icon">{icon}</div>
+      </div>
+      
+      <div className="quadrant-inputs">
+        {visibleInputs.map((loc, idx) => (
+          <div key={idx} className="input-row">
+            <span className="input-number">{idx + 1}</span>
+            <input
+              type="text"
+              value={loc}
+              onChange={(e) => onChange(idx, e.target.value)}
+              placeholder="Enter stop location"
+              className={`location-input ${loc.trim() !== "" ? "filled" : ""}`}
+            />
+            {loc.trim() !== "" && <span className="input-check">✓</span>}
+          </div>
+        ))}
+      </div>
+      
+      <div className="quadrant-footer">
+        <span className="stop-count">{filledCount}/4 stops</span>
+      </div>
     </div>
   );
 }
