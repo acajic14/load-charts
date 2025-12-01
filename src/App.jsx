@@ -31,9 +31,6 @@ function App() {
     });
   };
 
-  // Count filled locations
-  const filledCount = Object.values(locations).flat().filter(l => l.trim() !== "").length;
-  const totalSlots = 16;
 
   // --- Export as image (html2canvas) ---
   const exportAsImage = async () => {
@@ -102,7 +99,7 @@ function App() {
             <QuadrantBox
               number="2"
               title="Quadrant 2"
-              subtitle="Back Left"
+              subtitle="Front Left"
               icon="↖"
               locations={locations.q2}
               onChange={(idx, val) => handleInputChange("q2", idx, val)}
@@ -110,7 +107,7 @@ function App() {
             <QuadrantBox
               number="4"
               title="Quadrant 4"
-              subtitle="Dangerous Goods"
+              subtitle="Back Left • Dangerous Goods"
               icon="⚠️"
               isDangerous
               locations={locations.q4}
@@ -130,17 +127,6 @@ function App() {
               </div>
             </div>
             <div className="van-label">Van Layout Reference</div>
-            
-            {/* Progress indicator */}
-            <div className="progress-container">
-              <div className="progress-bar">
-                <div 
-                  className="progress-fill"
-                  style={{ width: `${(filledCount / totalSlots) * 100}%` }}
-                ></div>
-              </div>
-              <div className="progress-text">{filledCount}/{totalSlots} stops assigned</div>
-            </div>
           </div>
 
           {/* Right quadrants */}
@@ -188,8 +174,6 @@ function App() {
 function QuadrantBox({ number, title, subtitle, icon, locations, onChange, isDangerous = false }) {
   const visibleInputs = [...locations];
   while (visibleInputs.length < 4) visibleInputs.push("");
-  
-  const filledCount = locations.filter(l => l.trim() !== "").length;
 
   return (
     <div className={`quadrant-box ${isDangerous ? 'quadrant-dangerous' : ''}`}>
@@ -210,16 +194,11 @@ function QuadrantBox({ number, title, subtitle, icon, locations, onChange, isDan
               type="text"
               value={loc}
               onChange={(e) => onChange(idx, e.target.value)}
-              placeholder="Enter stop location"
+              placeholder="Street or town name"
               className={`location-input ${loc.trim() !== "" ? "filled" : ""}`}
             />
-            {loc.trim() !== "" && <span className="input-check">✓</span>}
           </div>
         ))}
-      </div>
-      
-      <div className="quadrant-footer">
-        <span className="stop-count">{filledCount}/4 stops</span>
       </div>
     </div>
   );
